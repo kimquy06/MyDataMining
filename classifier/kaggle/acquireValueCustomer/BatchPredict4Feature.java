@@ -114,7 +114,7 @@ public class BatchPredict4Feature {
 
 		for (int j = 1; j < s_parts.length; j++) {
 			String text = s_parts[j];
-			if (j == 4) {
+			if (j == s_parts.length-1) {
 				values[j - 1] = attributeReturn.indexOf(text);
 			} else {
 				values[j - 1] = Double.valueOf(text);
@@ -123,7 +123,7 @@ public class BatchPredict4Feature {
 		//System.out.println(values[6]);
 		// add
 		instance.add(new DenseInstance(1.0, values));		
-		instance.setClass(instance.attribute(3));
+		instance.setClass(instance.attribute(s_parts.length-2));
 		return instance;
 	}
 }

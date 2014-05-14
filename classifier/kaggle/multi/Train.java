@@ -7,6 +7,7 @@ import java.util.Random;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
+import weka.classifiers.meta.LogitBoost;
 import weka.classifiers.pmml.consumer.NeuralNetwork;
 import weka.classifiers.pmml.consumer.PMMLClassifier;
 import weka.classifiers.pmml.consumer.SupportVectorMachineModel;
@@ -24,16 +25,8 @@ import weka.core.SerializationHelper;
 import weka.core.converters.ArffLoader;
 import weka.core.converters.Loader;
 
-/**
- * The Train class is responsible for loading the training data, instantiating a
- * Classifier, then building the classifier instance with the training data. It
- * then serializes the Classifier to disk for other operations to use.
- * 
- * As seen in the README.md file, we have converted the given CSV formatted
- * traiing and teat data into ARFF formatted files. This allows us to specify
- * the types of each column (nominal, numeric, string).
- * 
- * @author jbirchfield
+/** 
+ * @author quyntk
  * 
  */
 public class Train {
@@ -51,8 +44,8 @@ public class Train {
 				File.separator);*/
 		//String trainFile = "data\\AcquireValueShopper\\train_new_remove_userid.arff".replace("\\", File.separator);
 		//train_brand_company_cate.arff
-		String trainFile = "data\\AcquireValueShopper\\train_brand_company_cate.arff".replace("\\", File.separator);				
-		String modelFile = "data\\AcquireValueShopper\\decisionTable_bayes_trees_4feature.model".replace("\\", File.separator);
+		String trainFile = "data\\AcquireValueShopper\\train_55features.arff".replace("\\", File.separator);				
+		String modelFile = "data\\AcquireValueShopper\\decisionTable_bayes_trees_logiBoost_55feature.model".replace("\\", File.separator);
 		
 		
 		ArffLoader trainLoader = new ArffLoader();
@@ -85,11 +78,11 @@ public class Train {
 		MultiClassifier multiClassifier = new MultiClassifier();
 
 		RandomForest forest = new RandomForest();
-		forest.setNumTrees(1000);
-		forest.setMaxDepth(0);
-		forest.setNumFeatures(3);
-		forest.setSeed(1);
-		forest.setDebug(false);
+		//forest.setNumTrees(1000);
+		//forest.setMaxDepth(0);
+		//forest.setNumFeatures(8);
+		//forest.setSeed(1);
+		//forest.setDebug(false);
 
 		IBk ibk = new IBk();
 		ibk.setKNN(4);
@@ -132,7 +125,10 @@ public class Train {
 		//rule
 		DecisionTable decisionTable = new DecisionTable();
 		PART part = new PART();
-
+		//logi boost
+		LogitBoost logiBoost = new LogitBoost();
+		//logiBoost.buildClassifier(trainDataSet);
+		
 		//rule
 		multiClassifier.addClassifier(decisionTable);
 		//multiClassifier.addClassifier(part);
@@ -143,6 +139,8 @@ public class Train {
 		multiClassifier.addClassifier(randomTree);
 		multiClassifier.addClassifier(j48);
 		multiClassifier.addClassifier(forest);
+		
+		multiClassifier.addClassifier(logiBoost);
 		//Neural
 		//NeuralNetwork neural = new NeuralNetwork(null, trainDataSet, null);
 		//SVM

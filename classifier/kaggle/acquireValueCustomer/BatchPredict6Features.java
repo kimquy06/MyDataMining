@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -17,29 +18,45 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 
-public class BatchPredict {
+public class BatchPredict6Features {
 	FastVector attributes;
 	FastVector attributeReturn;
 
 	public static void main(String[] args){
-		BatchPredict batchPredict = new BatchPredict();
+		BatchPredict6Features batchPredict = new BatchPredict6Features();
 		batchPredict.init();
 		batchPredict.batchPredict();
 	}
 	
 	public void batchPredict() {
 		// load all test set
-		String modelFile = "data\\AcquireValueShopper\\decisionTable_bayes_trees.model".replace("\\",
+		String modelFile = "data\\AcquireValueShopper\\logiBoost_6features.model".replace("\\",
 				File.separator);
-		String pathTest = "data/AcquireValueShopper/test_new.csv";		
+		String pathTest = "data/AcquireValueShopper/test_6features.csv";
 		String pathPredict = "data/AcquireValueShopper/submission.csv";
-
+		String pathFulTest = "data/AcquireValueShopper/test_new.csv";
 		Scanner scanner;
 		String line = "";
 		String[] partsOfLine = null;
 		String id = "";
 		PrintWriter output;
 		Map<String, String> testSet = new HashMap<String, String>();
+		//full userid
+		List<String> userids = new ArrayList<String>();
+		try {
+			scanner = new Scanner(new File(pathFulTest));
+			while (scanner.hasNext()) {
+				line = scanner.nextLine().trim();
+				partsOfLine = line.split(",");
+				id = partsOfLine[0];
+				userids.add(id);
+			}
+			scanner.close();
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		//from test file
 		try {
 			scanner = new Scanner(new File(pathTest));
 			while (scanner.hasNext()) {
@@ -63,17 +80,19 @@ public class BatchPredict {
 
 			output = new PrintWriter(pathPredict);
 			output.append("id,repeatProbability" + "\n");
-			Iterator<String> idIterator = testSet.keySet().iterator();
-			while (idIterator.hasNext()) {
-				id = idIterator.next();
-				line = testSet.get(id);
-				Instances instances =  buildInstance(line);
-				Instance instance = instances.instance(0);
-				returnProb = classifier.distributionForInstance(instance);
-				prob = returnProb[1];
-				//prob = classifier.classifyInstance(instance);
+			for(int i=0; i< userids.size(); i++ ){
+				id = userids.get(i);
+				if(testSet.containsKey(id)){
+					line = testSet.get(id);
+					Instances instances =  buildInstance(line);
+					Instance instance = instances.instance(0);
+					returnProb = classifier.distributionForInstance(instance);
+					prob = returnProb[1];					
+				}else{
+					prob = 0.0;
+				}
 				output.append(id + "," + prob + "\n");
-			}
+			}		
 			output.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -88,22 +107,21 @@ public class BatchPredict {
 		// 1. set up attributes
 		attributes = new FastVector();
 		// - numeric: 1
-		attributes.addElement(new Attribute("IsMarket"));
+		attributes.addElement(new Attribute("never_bought_category"));		
 		// - numeric: 2
-		attributes.addElement(new Attribute("IsMonth"));
+		attributes.addElement(new Attribute("never_bought_brand"));
 		// - numeric: 3
-		attributes.addElement(new Attribute("IsCategory"));
+		attributes.addElement(new Attribute("has_bought_brand_company_category"));
 		// - numeric: 4
-		attributes.addElement(new Attribute("IsCompany"));
+		attributes.addElement(new Attribute("has_bought_brand_category"));
 		// - numeric: 5
-		attributes.addElement(new Attribute("IsBrand"));
-		// - numeric: 5
-		attributes.addElement(new Attribute("OfferValue"));
+		attributes.addElement(new Attribute("has_bought_brand_company"));		
+		//attributes.addElement(new Attribute("classname"));
 		// - nominal: 6
 		attributeReturn = new FastVector();
-		attributeReturn.addElement("f");
-		attributeReturn.addElement("t");
-		attributes.addElement(new Attribute("Return", attributeReturn));
+		attributeReturn.addElement("0");
+		attributeReturn.addElement("1");
+		attributes.addElement(new Attribute("classname", attributeReturn));
 	}
 
 	private Instances buildInstance(String data) {		
@@ -121,14 +139,14 @@ public class BatchPredict {
 		for (int j = 1; j < s_parts.length; j++) {
 			String text = s_parts[j];
 			if (j == s_parts.length-1) {
-				values[j - 1] = attributeReturn.indexOf(text);
+				values[j-1] = attributeReturn.indexOf(text);
 			} else {
-				values[j - 1] = Double.valueOf(text);
+				values[j-1] = Double.valueOf(text);
 			}
 		}
 		//System.out.println(values[6]);
 		// add
-		instance.add(new DenseInstance(1.0, values));
+		instance.add(new DenseInstance(1.0, values));		
 		instance.setClass(instance.attribute(s_parts.length-2));
 		return instance;
 	}
